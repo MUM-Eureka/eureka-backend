@@ -1,22 +1,16 @@
-import * as dotenv from 'dotenv';
+require('dotenv').config(); // to allow typeorm to infer outside of nest app
 
-// used for migrations in dev
-const env_name = 'development';
-const dotenv_path = `${process.cwd()}/config/env/${env_name}.env`;
-const result = dotenv.config({ path: dotenv_path });
-console.log(`environment variables from ${env_name} ${result.parsed ? 'succesfully' : 'unsuccessfully'} populated`);
-
-export default {
-  type: 'postgres',
+module.exports = {
+  type: process.env.DB_TYPE,
   host: process.env.DB_HOST,
-  port: +process.env.DB_PORT,
+  port: parseInt(process.env.DB_PORT),
+  database: process.env.DB_NAME,
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  entities: ['src/*/**.entity{.ts,.js}'],
-  migrations: ['src/migrations/*{.ts,.js}'],
+  entities: ['src/*/*.entity.ts', 'dist/*/*.entity.js'],
   synchronize: false,
   logging: [],
+  migrations: ['src/migrations/*{.ts,.js}'],
   cli: {
     migrationsDir: 'src/migrations'
   }

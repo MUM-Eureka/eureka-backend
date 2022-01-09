@@ -1,23 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import dbConfig from './config/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import configuration from '../config/configuration';
-import dbConfig from '../config/dbconfig';
+import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: `${process.cwd()}/config/env/${process.env.NODE_ENV}.env`,
-      load: [configuration]
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: dbConfig
-    })
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), TypeOrmModule.forRoot(dbConfig as PostgresConnectionOptions)],
   controllers: [AppController],
   providers: [AppService]
 })
