@@ -1,11 +1,11 @@
 // infered from ConfigModule
 export default {
   type: process.env.DB_TYPE,
-  host: process.env.HOST,
+  host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT),
-  database: process.env.DATABASE,
-  username: process.env.USERNAME,
-  password: process.env.PASSWORD,
+  database: process.env.DB_NAME,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   entities: [__dirname + '/../*/*.entity{.ts,.js}'],
   synchronize: false,
   logging: [],
