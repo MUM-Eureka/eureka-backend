@@ -19,7 +19,7 @@ class UserEntity {
         this.email = this.email.toLowerCase();
     }
     
-    @Column()
+    @Column({ select: false})
     public password: string;
 }
 export default UserEntity;

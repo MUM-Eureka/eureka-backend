@@ -16,24 +16,25 @@ export class UsersService {
   ) {}
 
   create(user: User): Observable<User> {
-    return this.authService.hashPassword(user.password).pipe(
-      switchMap((passwordHash: string) => {
-        const newUser = new UserEntity();
-        newUser.firstName = user.firstName;
-        newUser.lastName = user.lastName;
-        newUser.email = user.email;
-        newUser.password = passwordHash;
-
-        return from(this.usersRepository.save(newUser)).pipe(
-          map((user: User) => {
-            const { password, ...result } = user;
-            return result;
-          }),
-          catchError((err) => throwError(err))
-        );
+    return this.mailExists(user.email).pipe(
+      switchMap((exists: boolean) => {
+        if (!exists) {
+          return this.authService.hashPassword(user.password).pipe(
+            switchMap((passwordHash: string) => {
+              user.password = passwordHash;
+              return from(this.usersRepository.save(user)).pipe(
+                map((user: User) => {
+                  const { password, ...result } = user;
+                  return result;
+                })
+              );
+            })
+          );
+        } else {
+          throw new HttpException('Email already in use', HttpStatus.CONFLICT);
+        }
       })
     );
-    // return from(this.usersRepository.save(user));
   }
 
   findOne(id: number): Observable<User> {
@@ -75,7 +76,7 @@ export class UsersService {
     );
   }
 
-  validateUser(email: string, password: string): Observable<User> {
+  private validateUser(email: string, password: string): Observable<User> {
     return this.findByMail(email).pipe(
       switchMap((user: User) => {
         if (user) {
@@ -96,7 +97,21 @@ export class UsersService {
     );
   }
 
-  findByMail(email: string): Observable<User> {
-    return from(this.usersRepository.findOne({ email }));
+  private findByMail(email: string): Observable<User> {
+    return from(
+      this.usersRepository.findOne({ email }, { select: ['id', 'email', 'firstName', 'lastName', 'password'] })
+    );
+  }
+
+  private mailExists(email: string): Observable<boolean> {
+    return from(this.usersRepository.findOne({ email })).pipe(
+      map((user: User) => {
+        if (user) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+    );
   }
 }
