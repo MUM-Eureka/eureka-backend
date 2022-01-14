@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import CreateUserDto from '../dto/createUser.dto';
 import * as bcrypt from 'bcrypt';
 import { User } from '../models/user.interface';
 import UserEntity from '../models/user.entity';
@@ -71,29 +70,29 @@ export class UsersService {
   login(user: User): Observable<string> {
     return this.validateUser(user.email, user.password).pipe(
       switchMap((user: User) => {
-        if (user) {
-          return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
-        } else {
-          return 'Wrong Credentials';
-        }
+        return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
       })
     );
   }
 
   validateUser(email: string, password: string): Observable<User> {
     return this.findByMail(email).pipe(
-      switchMap((user: User) =>
-        this.authService.comparePasswords(password, user.password).pipe(
-          map((match: boolean) => {
-            if (match) {
-              const { password, ...result } = user;
-              return result;
-            } else {
-              throw Error;
-            }
-          })
-        )
-      )
+      switchMap((user: User) => {
+        if (user) {
+          return this.authService.comparePasswords(password, user.password).pipe(
+            map((match: boolean) => {
+              if (match) {
+                const { password, ...result } = user;
+                return result;
+              } else {
+                throw new HttpException('Login was not successful', HttpStatus.UNAUTHORIZED);
+              }
+            })
+          );
+        } else {
+          throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        }
+      })
     );
   }
 

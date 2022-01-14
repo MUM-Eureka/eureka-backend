@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { get } from 'http';
 import { catchError, map, Observable, of } from 'rxjs';
-import CreateUserDto from '../dto/createUser.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from '../models/user.interface';
 import { UsersService } from '../services/users.service';
 
@@ -18,6 +18,7 @@ export class UsersController {
   }
 
   @Post('login')
+  @HttpCode(200)
   login(@Body() user: User): Observable<Object> {
     return this.usersService.login(user).pipe(
       map((jwt: string) => {
@@ -31,8 +32,10 @@ export class UsersController {
     return this.usersService.findOne(params.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(): Observable<User[]> {
+  findAll(@Req() request): Observable<User[]> {
+    console.log(request.user);
     return this.usersService.findAll();
   }
 
